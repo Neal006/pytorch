@@ -91,9 +91,17 @@ def _no_grad_trunc_normal_(
     b: float,
     generator: torch.Generator | None = None,
 ) -> Tensor:
+    if std < 0:
+        raise ValueError(f"trunc_normal_ expects std >= 0, but got std={std}")
+
     # Meta tensors have no storage, so sampling is a no-op.
     if tensor.is_meta:
         return tensor
+
+    if std == 0:
+        # Like normal_ with std=0, every value is the mean (kept within [a, b]).
+        with torch.no_grad():
+            return tensor.fill_(max(a, min(mean, b)))
 
     def norm_cdf(x: float) -> float:
         return (1.0 + math.erf(x / math.sqrt(2.0))) / 2.0

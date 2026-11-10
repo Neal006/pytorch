@@ -161,6 +161,12 @@ class TestNNInit(TestCase):
             if not self._is_normal(input_tensor, mean, std):
                 raise AssertionError("Expected normal distribution")
 
+    def test_trunc_normal_std(self):
+        with self.assertRaisesRegex(ValueError, "std >= 0"):
+            init.trunc_normal_(torch.empty(3), std=-1.0)
+        self.assertEqual(init.trunc_normal_(torch.empty(3), mean=0.5, std=0.0), torch.full((3,), 0.5))
+        self.assertEqual(init.trunc_normal_(torch.empty(3), mean=5.0, std=0.0, a=-2.0, b=2.0), torch.full((3,), 2.0))
+
     @unittest.skipIf(not TEST_SCIPY, "Scipy not found.")
     def test_trunc_normal_generator(self):
         gen = torch.Generator()
