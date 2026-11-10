@@ -13650,6 +13650,14 @@ class TestNNDeviceType(NNTestCase):
         empty = get_total_norm([], norm_type=norm_type, dtype=torch.float32)
         self.assertEqual(empty.dtype, torch.float32)
 
+    @parametrize_test('foreach', (None, False))
+    def test_get_total_norm_zero_norm(self, foreach, device):
+        # The 0-"norm" counts non-zero entries over all tensors viewed as one vector.
+        grads = [torch.tensor([3.0, -4.0, 0.0], device=device), torch.tensor([1.0, 0.0], device=device)]
+        expected = torch.linalg.vector_norm(torch.cat(grads), 0)
+        self.assertEqual(get_total_norm(grads, norm_type=0, foreach=foreach), expected)
+        self.assertEqual(get_total_norm(grads[0], norm_type=0, foreach=foreach), 2.0)
+
     @parametrize_test('foreach', (False, True))
     @parametrize_test('norm_type', (0.5, 1.5, 2, 4, 'inf'))
     def test_clip_grad_norm(self, norm_type, foreach, device):
